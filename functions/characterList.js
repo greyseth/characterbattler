@@ -74,6 +74,16 @@ module.exports = async function characterList(interaction, index, newMsg) {
         .setCustomId("btn_char_list_search")
     );
 
-  if (!newMsg) await interaction.update({ embeds: [embed], components: [row] });
-  else await interaction.reply({ embeds: [embed], components: [row] });
+  if (!newMsg)
+    await interaction.update({
+      embeds: [embed],
+      components: [row],
+      ephemeral: true,
+    });
+  else
+    await interaction.reply({
+      embeds: [embed],
+      components: [row],
+      ephemeral: true,
+    });
 };

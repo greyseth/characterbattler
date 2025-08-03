@@ -53,7 +53,7 @@ module.exports = {
             editBattle(battleData, battleIndex);
 
             await interaction.update({
-              content: `Battle initialized`,
+              content: `Battle initialized\n${battleData.players[0]} click the Start Battle button to begin`,
               embeds: [
                 new EmbedBuilder()
                   .setAuthor({
@@ -182,7 +182,7 @@ module.exports = {
           messages: [
             {
               role: "system",
-              content: `You're a dungeonmaster for a battle between 2 player characters who are fighting each other. You take into account both characters' stats, abilities, and the d20 roll to determine the outcome of the action they take. If a character does something that seems impossible, you'll respond with "INVALID ACTION." If not, you determine the outcome of the move based on the aforementioned proerties. If it's an offensive move, you add "damage taken:(number)" after describing the outcome, and make it balanced where each character starts off with 200 health points. You'll simply respond with the outcome and the damage taken, no need to add any extra descriptions.`,
+              content: `You're a dungeonmaster for a battle between 2 player characters who are fighting each other. You take into account both characters' stats, abilities, and the d20 roll to determine the outcome of the action they take. If a character does something that seems impossible, you'll respond with "INVALID ACTION." But ONLY if it's really absurdly impossible for the character to do such action. If not, you determine the outcome of the move based on the aforementioned proerties. If it's an offensive move, you add "damage taken:(number)" after describing the outcome, and make it balanced where each character starts off with 200 health points. You'll simply respond with the outcome and the damage taken, no need to add any extra descriptions.`,
             },
             {
               role: "assistant",
@@ -213,12 +213,16 @@ module.exports = {
         });
 
         let outcome = completion.choices[0].message.content;
+        console.log(outcome);
 
-        const damage = parseInt(
-          outcome.toLowerCase().split("damage taken: ")[1]
-        );
+        let damage = 0;
+        if (outcome.toLowerCase().includes("damage taken: ")) {
+          parseInt(outcome.toLowerCase().split("damage taken: ")[1]) ?? 0;
+        }
 
+        // console.log("charHealth: " + ogBattle.characters[1].health);
         ogBattle.characters[ogBattle.turn === 0 ? 1 : 0].health -= damage;
+        // console.log("charHealth new: " + ogBattle.characters[1].health);
         editBattle(
           {
             ...ogBattle,

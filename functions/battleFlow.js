@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require("@discordjs/builders");
-const { getBattles } = require("../util/battles");
+const { getBattles, removeBattle } = require("../util/battles");
 const { ActionRowBuilder } = require("@discordjs/builders");
 const { ButtonBuilder, ButtonStyle } = require("discord.js");
 
@@ -12,6 +12,30 @@ module.exports = async (interaction, battleId, prevOutcome) => {
       embeds: [],
       components: [],
     });
+
+  let deadCharacter = { isDead: false, charIndex: 0 };
+  battleData.characters.forEach((char, i) => {
+    if (char.health < 0) deadCharacter = { isDead: true, charIndex: i };
+  });
+
+  if (deadCharacter.isDead) {
+    const victorIndex = deadCharacter.charIndex === 0 ? 1 : 0;
+    const victor = battleData.characters[victorIndex];
+    await interaction.update({
+      content: "Battle concluded",
+      embeds: [
+        new EmbedBuilder()
+          .setTitle("Winner: " + victor.name)
+          .setDescription(
+            `${battleData.players[victorIndex].username} is victorious!`
+          )
+          .setColor("#FFD700"),
+      ],
+      components: [],
+    });
+
+    removeBattle(getBattles().findIndex((b) => b.id == battleId));
+  }
 
   const curTurn = battleData.turn;
 
