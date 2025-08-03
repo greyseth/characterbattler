@@ -10,4 +10,12 @@ module.exports = {
     })),
   addBattle: (value) => (battles = [...battles, value]),
   removeBattle: (index) => (battles = battles.filter((_, i) => i !== index)),
+  newId: () => {
+    let biggestId = 0;
+    battles.forEach((b) => {
+      if (b.id > biggestId) biggestId = b.id;
+    });
+
+    return biggestId + 1;
+  },
 };

@@ -24,6 +24,10 @@ const {
   characterListModals,
   characterRegistrationModals,
 } = require("./handlers/charactermenu/menumodals");
+const {
+  battleMenuButtonHandler,
+  battleModalHandler,
+} = require("./handlers/battle/battlemenu");
 
 const client = new Client({
   intents: [
@@ -89,6 +93,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
   await mainMenuButtonHandler(interaction);
   await characterListButtonHandler(interaction);
   await characterRegistrationButtonHandler(interaction);
+
+  await battleMenuButtonHandler(interaction);
 });
 
 // Modal submit handlers
@@ -97,6 +103,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
   await characterListModals(interaction);
   await characterRegistrationModals(interaction);
+
+  await battleModalHandler(interaction);
 });
 
 client.once(Events.ClientReady, (readyClient) => {
