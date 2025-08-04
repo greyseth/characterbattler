@@ -1,14 +1,9 @@
 const { OpenAI } = require("openai");
-const {
-  openAiOrganization,
-  openAiProject,
-  openAiToken,
-} = require("../config.json");
 
 const openai = new OpenAI({
-  organization: openAiOrganization,
-  project: openAiProject,
-  apiKey: openAiToken,
+  organization: process.env.OPENAI_ORGANIZATION,
+  project: process.env.OPENAI_PROJECT,
+  apiKey: process.env.OPENAI_TOKEN,
 });
 
 module.exports = openai;
