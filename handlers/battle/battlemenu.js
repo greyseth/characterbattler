@@ -11,7 +11,6 @@ const {
   editBattle,
   newId,
   removeBattle,
-  setBattles,
 } = require("../../util/battles");
 const { ActionRowBuilder } = require("discord.js");
 const db = require("../../util/db");
@@ -73,6 +72,9 @@ module.exports = {
                     `${battleData.characters[1].description}\n\nHealth: ${battleData.characters[1].health}`
                   )
                   .setColor("Green"),
+                new EmbedBuilder()
+                  .setTitle("Battle Setting:")
+                  .setDescription(battleData.setting),
               ],
               components: [
                 new ActionRowBuilder().addComponents(
@@ -94,7 +96,7 @@ module.exports = {
 
         if (command === "decline") {
           const battleIndex = getBattles().findIndex(
-            (b) => b.players[1] === interaction.user.id && !b.running
+            (b) => b.players[1].id === interaction.user.id && !b.running
           );
           if (battleIndex !== -1) {
             removeBattle(battleIndex);
@@ -161,13 +163,14 @@ module.exports = {
 
   async battleModalHandler(interaction) {
     if (interaction.customId.startsWith("modal_battle_move_")) {
+      await interaction.deferReply();
+
       const moveInput = interaction.fields.getTextInputValue(`input_move`);
 
       const battleId = interaction.customId.split("modal_battle_move_")[1];
       const battleIndex = getBattles().findIndex((b) => b.id == battleId);
       const ogBattle = getBattles()[battleIndex];
 
-      // TODO: Write prompt and request to OpenAI
       try {
         const stringifyChar = (char) =>
           JSON.stringify(char)
@@ -182,7 +185,7 @@ module.exports = {
           messages: [
             {
               role: "system",
-              content: `You're a dungeonmaster for a battle between 2 player characters who are fighting each other. You take into account both characters' stats, abilities, and the d20 roll to determine the outcome of the action they take. If a character does something that seems impossible, you'll respond with "INVALID ACTION." But ONLY if it's really absurdly impossible for the character to do such action. If not, you determine the outcome of the move based on the aforementioned proerties. If it's an offensive move, you add "damage taken:(number)" after describing the outcome, and make it balanced where each character starts off with 200 health points. You'll simply respond with the outcome and the damage taken, no need to add any extra descriptions.`,
+              content: `You're a dungeonmaster for a battle between 2 player characters who are fighting each other. You take into account both characters' stats, abilities, and the d20 roll to determine the outcome of the action they take. If a character does something that seems impossible, you'll respond with "INVALID ACTION." If not, you determine the outcome of the move based on the aforementioned proerties. If it's an offensive move, you add "damage taken:(number)" after describing the outcome, and make it balanced where each character starts off with 200 health points, and a moderately successful should deal a randomized amount of around 30 damage depending on the amount rolled and the severity of the attack. You can also use the battle setting to create some unexpected twists and variables. You'll also be adding/removing states that can affect future moves (example: character is trapped, character is hidden, character has broken limb, etc). You'll simply respond with the outcome, states, and the damage taken (without specifying the remaining health), no need to add any extra descriptions.`,
             },
             {
               role: "assistant",
@@ -193,16 +196,20 @@ module.exports = {
               content: "Character 2:\n" + stringifyChar(ogBattle.characters[1]),
             },
             {
-              role: "user",
-              content: `${
-                ogBattle.characters[ogBattle.turn].name
-              } move turn:\n${moveInput}`,
+              role: "assistant",
+              content: `Battle setting:\n${ogBattle.setting}`,
             },
             {
               role: "assistant",
               content: `Previous action:\n${
                 ogBattle.lastOutcome ?? "None yet"
               }`,
+            },
+            {
+              role: "user",
+              content: `${
+                ogBattle.characters[ogBattle.turn].name
+              } move turn:\n${moveInput}`,
             },
             {
               role: "user",
@@ -213,12 +220,14 @@ module.exports = {
         });
 
         let outcome = completion.choices[0].message.content;
-        console.log(outcome);
 
         let damage = 0;
         if (outcome.toLowerCase().includes("damage taken: ")) {
-          parseInt(outcome.toLowerCase().split("damage taken: ")[1]) ?? 0;
+          damage =
+            parseInt(outcome.toLowerCase().split("damage taken: ")[1]) ?? 0;
         }
+
+        if (damage > 0) damage += Math.floor(Math.random() * 21) - 10;
 
         // console.log("charHealth: " + ogBattle.characters[1].health);
         ogBattle.characters[ogBattle.turn === 0 ? 1 : 0].health -= damage;
@@ -232,14 +241,14 @@ module.exports = {
           battleIndex
         );
 
-        battleFlow(
+        await battleFlow(
           interaction,
           battleId,
           `${moveInput}\n\nDice roll: ${diceRoll}\n\n${outcome}`
         );
       } catch (err) {
         console.log(err);
-        interaction.channel.send({
+        await interaction.editReply({
           content: "An error has occurred. Please try again.",
         });
       }

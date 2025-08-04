@@ -16,6 +16,11 @@ module.exports = {
         .setName("opponent")
         .setDescription("User to challenge to a character battle")
         .setRequired(true)
+    )
+    .addStringOption((option) =>
+      option
+        .setName("setting")
+        .setDescription("Describe the setting the battle will take place in")
     ),
   async execute(interaction) {
     // Checks if user has a character selected
@@ -51,6 +56,9 @@ module.exports = {
         {},
       ],
       players: [interaction.user, interaction.options.getUser("opponent")],
+      setting:
+        interaction.options.getString("setting") ??
+        "A simulation environment that can change to anything",
       running: false,
       turn: 0,
     });

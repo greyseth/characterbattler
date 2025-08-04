@@ -59,6 +59,9 @@ module.exports = async (interaction, battleId, prevOutcome) => {
         `${battleData.characters[1].description}\n\nHealth: ${battleData.characters[1].health}`
       ),
     // .setColor("Green"),
+    new EmbedBuilder()
+      .setTitle("Battle Setting:")
+      .setDescription(battleData.setting),
   ];
 
   const controls = new ActionRowBuilder().addComponents(
@@ -74,11 +77,23 @@ module.exports = async (interaction, battleId, prevOutcome) => {
       .setStyle(ButtonStyle.Primary)
   );
 
-  await interaction.update({
-    content: `**${battleData.characters[curTurn].name}'s turn**\n${
-      prevOutcome ?? ""
-    }`,
-    embeds: characterDataEmbeds,
-    components: [controls],
-  });
+  if (interaction.replied || interaction.deferred) {
+    await interaction.editReply({
+      content: `${battleData.characters[curTurn === 0 ? 1 : 0].name}: ${
+        prevOutcome ?? ""
+      }\n**${battleData.characters[curTurn].name}'s turn**`,
+      embeds: characterDataEmbeds,
+      components: [controls],
+    });
+  } else {
+    await interaction.reply({
+      content: prevOutcome
+        ? `${battleData.characters[curTurn === 0 ? 1 : 0].name}: ${
+            prevOutcome ?? ""
+          }\n**${battleData.characters[curTurn].name}'s turn**`
+        : `**${battleData.characters[curTurn].name}'s turn**`,
+      embeds: characterDataEmbeds,
+      components: [controls],
+    });
+  }
 };
