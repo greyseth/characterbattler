@@ -1,20 +1,10 @@
+require("dotenv").config();
+
 const fs = require("node:fs");
 const path = require("path");
 
-const {
-  Client,
-  Events,
-  GatewayIntentBits,
-  Collection,
-  EmbedBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
-} = require("discord.js");
-const { token, secret } = require("./config.json");
+const { Client, Events, GatewayIntentBits, Collection } = require("discord.js");
+
 const {
   mainMenuButtonHandler,
   characterListButtonHandler,
@@ -111,4 +101,4 @@ client.once(Events.ClientReady, (readyClient) => {
   console.log("CharacterBattler is online");
 });
 
-client.login(token);
+client.login(process.env.TOKEN);
