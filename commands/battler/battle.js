@@ -31,6 +31,13 @@ module.exports = {
         ephemeral: true,
       });
 
+    // Checks if user selected themselves
+    if (interaction.user.id === interaction.options.getUser("oppponent").id)
+      return await interaction.reply({
+        content: "You can't challenge yourself!",
+        ephemeral: true,
+      });
+
     const controls = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId(
