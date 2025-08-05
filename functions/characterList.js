@@ -74,16 +74,27 @@ module.exports = async function characterList(interaction, index, newMsg) {
         .setCustomId("btn_char_list_search")
     );
 
+  const managementRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setLabel("Edit Details")
+      .setStyle(ButtonStyle.Secondary)
+      .setCustomId("btn_char_list_edit"),
+    new ButtonBuilder()
+      .setLabel("Delete Character")
+      .setStyle(ButtonStyle.Danger)
+      .setCustomId("btn_char_list_delete")
+  );
+
   if (!newMsg)
     await interaction.update({
       embeds: [embed],
-      components: [row],
+      components: [row, managementRow],
       ephemeral: true,
     });
   else
     await interaction.reply({
       embeds: [embed],
-      components: [row],
+      components: [row, managementRow],
       ephemeral: true,
     });
 };

@@ -69,6 +69,12 @@ module.exports = {
         characterList(interaction, foundChar, false);
       }
     }
+
+    // TODO: Character edit
+
+    // Character delete
+    if (interaction.customId === "modal_delete") {
+    }
   },
   // I REALLY should make this a loop... but maybe later I'm too lazy
   async characterRegistrationModals(interaction) {

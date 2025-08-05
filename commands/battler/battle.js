@@ -32,7 +32,7 @@ module.exports = {
       });
 
     // Checks if user selected themselves
-    if (interaction.user.id === interaction.options.getUser("oppponent").id)
+    if (interaction.user.id === interaction.options.getUser("opponent").id)
       return await interaction.reply({
         content: "You can't challenge yourself!",
         ephemeral: true,

@@ -59,6 +59,23 @@ module.exports = {
       modal.addComponents(new ActionRowBuilder().addComponents(input));
       await interaction.showModal(modal);
     }
+
+    if (interaction.customId === "btn_char_list_edit") {
+      await interaction.showModal();
+    }
+    if (interaction.customId === "btn_char_list_delete") {
+      const modal = new ModalBuilder()
+        .setTitle("Confirm Character Deletion")
+        .setCustomId("modal_delete");
+      const input = new TextInputBuilder()
+        .setLabel("Type your character's name to confirm")
+        .setStyle(TextInputStyle.Short)
+        .setCustomId("input_confirmation");
+
+      modal.addComponents(input);
+
+      await interaction.showModal(modal);
+    }
   },
   async characterRegistrationButtonHandler(interaction) {
     // Handles buttons for character registration form
