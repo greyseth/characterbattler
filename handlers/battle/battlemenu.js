@@ -231,7 +231,8 @@ module.exports = {
         if (damage > 0) damage += randomCrit;
 
         let newTurn = ogBattle.turn;
-        if (!outcome.includes("INVALID ACTION")) newTurn === 0 ? 1 : 0;
+        if (!outcome.includes("INVALID ACTION"))
+          newTurn = ogBattle.turn === 0 ? 1 : 0;
 
         ogBattle.characters[ogBattle.turn === 0 ? 1 : 0].health -= damage;
         editBattle(
