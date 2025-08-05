@@ -58,7 +58,7 @@ module.exports = {
       characters: [
         {
           ...(await db.get(`${interaction.user.id}_char_selected`)),
-          health: 130,
+          health: 150,
         },
         {},
       ],

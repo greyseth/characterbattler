@@ -18,25 +18,6 @@ module.exports = async (interaction, battleId, prevOutcome) => {
     if (char.health < 0) deadCharacter = { isDead: true, charIndex: i };
   });
 
-  if (deadCharacter.isDead) {
-    const victorIndex = deadCharacter.charIndex === 0 ? 1 : 0;
-    const victor = battleData.characters[victorIndex];
-    await interaction.update({
-      content: "Battle concluded",
-      embeds: [
-        new EmbedBuilder()
-          .setTitle("Winner: " + victor.name)
-          .setDescription(
-            `${battleData.players[victorIndex].username} is victorious!`
-          )
-          .setColor("#FFD700"),
-      ],
-      components: [],
-    });
-
-    removeBattle(getBattles().findIndex((b) => b.id == battleId));
-  }
-
   const curTurn = battleData.turn;
 
   const characterDataEmbeds = [
@@ -63,6 +44,44 @@ module.exports = async (interaction, battleId, prevOutcome) => {
       .setTitle("Battle Setting:")
       .setDescription(battleData.setting),
   ];
+
+  if (deadCharacter.isDead) {
+    const victorIndex = deadCharacter.charIndex === 0 ? 1 : 0;
+    const victor = battleData.characters[victorIndex];
+
+    if (interaction.replied || interaction.deferred) {
+      await interaction.editReply({
+        content: `${prevOutcome}\n\n**Battle concluded**`,
+        embeds: [
+          new EmbedBuilder()
+            .setTitle("Winner: " + victor.name)
+            .setDescription(
+              `${battleData.players[victorIndex].username} is victorious!`
+            ),
+          // .setColor("#FFD700"),
+          // FIXME: Again, why is expecting an array???
+        ],
+        components: [],
+      });
+    } else {
+      await interaction.reply({
+        content: `${prevOutcome}\n\n**Battle concluded**`,
+        embeds: [
+          new EmbedBuilder()
+            .setTitle("Winner: " + victor.name)
+            .setDescription(
+              `${battleData.players[victorIndex].username} is victorious!`
+            ),
+          // .setColor("#FFD700"),
+          // FIXME: Again, why is expecting an array???
+        ],
+        components: [],
+      });
+    }
+
+    removeBattle(getBattles().findIndex((b) => b.id == battleId));
+    return;
+  }
 
   const controls = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
