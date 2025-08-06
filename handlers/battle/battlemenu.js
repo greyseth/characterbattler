@@ -109,6 +109,12 @@ module.exports = {
         }
 
         if (command === "start") {
+          // Randomize who gets the first turn
+          const battleIndex = getBattles().findIndex((b) => b.id === id);
+          editBattle(
+            { ...getBattles()[battleIndex], turn: Math.random() < 0.5 ? 0 : 1 },
+            id
+          );
           await battleFlow(interaction, id);
         }
 
@@ -185,7 +191,7 @@ module.exports = {
           messages: [
             {
               role: "system",
-              content: `You're a dungeonmaster for a battle between 2 player characters who are fighting each other. You take into account both characters' stats, abilities, states, setting, and the d20 roll to determine the outcome of the action they take. If a character does something that seems impossible, you'll respond with "INVALID ACTION" and provide the reasoning for it. If not, you determine the outcome of the move based on the aforementioned proerties. If it's an offensive move, you add "damage taken:(number)" after describing the outcome, and make it balanced where each character starts off with 200 health points, and a moderately successful should deal a randomized amount of around 20 to 30 damage depending on the amount rolled and the severity of the attack. You can also use the battle setting to create some unexpected twists and variables. You'll also be adding/removing states that can affect future moves (example: character is trapped, character is hidden, character has broken limb, etc). You'll simply respond with the outcome, states, and the damage taken (without specifying the remaining health), no need to add any extra descriptions.`,
+              content: `You're a dungeonmaster for a battle between 2 player characters who are fighting each other. You take into account both characters' stats, abilities, states, setting, and the d20 roll to determine the outcome of the action they take. If a character does something that seems impossible after considering the states, the setting, and their abilities, you'll respond with "INVALID ACTION" and provide the reasoning for it. NOT used to indicate a failed but possible move. If not, you determine the outcome of the move based on the aforementioned proerties. If it's an offensive move, you add "damage taken:(number)" after describing the outcome, and make it balanced where each character starts off with 200 health points, and a successful attack should deal from a range of 5-30 damage depending on the amount rolled and the severity of the attack. You can also use the battle setting to create some unexpected twists and variables. You'll also be adding/removing states that can affect future moves (example: character is trapped, character is hidden, character has broken limb, etc). If the states remain the same as the previous turn, then you copy paste the previous states the new outcome. You'll simply respond with the outcome, states, and the damage taken (without specifying the remaining health), no need to add any extra descriptions.`,
             },
             {
               role: "assistant",
@@ -227,11 +233,14 @@ module.exports = {
             parseInt(outcome.toLowerCase().split("damage taken: ")[1]) ?? 0;
         }
 
-        let randomCrit = Math.floor(Math.random() * 21) - 10;
+        let randomCrit =
+          Math.floor(Math.random() * 21) +
+          ogBattle.characters[ogBattle.turn].stats.lck -
+          10;
         if (damage > 0) damage += randomCrit;
 
         let newTurn = ogBattle.turn;
-        if (!outcome.includes("INVALID ACTION"))
+        if (!outcome.toLowerCase().includes("INVALID ACTION"))
           newTurn = ogBattle.turn === 0 ? 1 : 0;
 
         ogBattle.characters[ogBattle.turn === 0 ? 1 : 0].health -= damage;
