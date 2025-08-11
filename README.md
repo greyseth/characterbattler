@@ -8,6 +8,7 @@ CharacterBattler is a Discord bot that lets you have PvP battles with any charac
 
 # Invite
 [Click here to add the bot to your server](https://discord.com/oauth2/authorize?client_id=1143042347496636426&permissions=51200&integration_type=0&scope=bot+applications.commands)
+[Vote on Top.gg](https://top.gg/bot/1143042347496636426)
 
 # Usage Instructions (also available using the bot's /help command)
 - Character Management
