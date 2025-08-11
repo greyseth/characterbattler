@@ -233,10 +233,9 @@ module.exports = {
             parseInt(outcome.toLowerCase().split("damage taken: ")[1]) ?? 0;
         }
 
-        let randomCrit =
-          Math.floor(Math.random() * 21) +
-          ogBattle.characters[ogBattle.turn].stats.lck -
-          10;
+        let randomCrit = Math.floor(Math.random() * 21);
+        // + ogBattle.characters[ogBattle.turn].stats.lck -
+        // 10;
         if (damage > 0) damage += randomCrit;
 
         let newTurn = ogBattle.turn;
