@@ -79,7 +79,7 @@ module.exports = {
 
     if (interaction.customId.startsWith("btn_char_list_export")) {
       const charName = interaction.customId.split("btn_char_list_export_")[1];
-      const char = (db.get(`${interaction.user.id}_char`) ?? []).find(
+      const char = ((await db.get(`${interaction.user.id}_char`)) ?? []).find(
         (c) => c.name === charName
       );
       if (char)
