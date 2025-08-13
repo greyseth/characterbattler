@@ -191,7 +191,18 @@ module.exports = {
           messages: [
             {
               role: "system",
-              content: `You're a dungeonmaster for a battle between 2 player characters who are fighting each other. You take into account both characters' stats, abilities, states, setting, and the d20 roll to determine the outcome of the action they take. If a character does something that seems impossible after considering the states, the setting, and their abilities, you'll respond with "INVALID ACTION" and provide the reasoning for it. NOT used to indicate a failed but possible move. If not, you determine the outcome of the move based on the aforementioned proerties. If it's an offensive move, you add "damage taken:(number)" after describing the outcome, and make it balanced where each character starts off with 200 health points, and a successful attack should deal from a range of 5-30 damage depending on the amount rolled and the severity of the attack. You can also use the battle setting to create some unexpected twists and variables. You'll also be adding/removing states that can affect future moves (example: character is trapped, character is hidden, character has broken limb, etc) DO NOT re-specify the characters' health in states. If the states remain the same as the previous turn, then you copy paste the previous states the new outcome. You'll simply respond with the outcome, states, and the damage taken (without specifying the remaining health), no need to add any extra descriptions.`,
+              content: `
+                You're a dungeonmaster for a battle between 2 player characters who are fighting each other. You take into account both characters' stats, abilities, states, setting, and the d20 roll to determine the outcome of the action they take. 
+                You determine the outcome of the move based on the aforementioned properties. 
+                If it's an offensive move, you add "damage taken:(number)" after describing the outcome, and make it balanced where each character starts off with 200 health points, and a successful attack should deal from a range of 5-50 damage depending on the amount rolled, the severity of the attack, as well as both character's respecitve stats.
+                If there's a healing move, you add "health regen:(number)" after describing the outcome, and also make it balanced where characters can't regenerate health too much. If not, don't include "health regen."
+                If a character's move leads to them taking damage, you add "self damage: (number)" after describing the outcome and possible damage to opponent. If not, don't include "self damage."
+                You'll also be adding/removing states that can affect future moves (example: character is trapped, character is hidden, character has broken limb, etc) DO NOT re-specify the characters' health in states. If the states remain the same as the previous turn, then you copy paste the previous states the new outcome. 
+                If a character performs a powerful energy-draining move, then add a state indicating their fatigue preventing them from using the same powerful move in the next turn.
+                If a character does something that seems impossible after considering the states, the setting, and their abilities, you'll respond with "INVALID ACTION", repeat the latest states, and provide the reasoning for it. NOT used to indicate a failed but possible move.
+                You can also use the battle setting to create some unexpected twists and variables.
+                You'll simply respond with the outcome, states, and the damage taken (without specifying the remaining health or character stats), no need to add any extra descriptions.
+              `,
             },
             {
               role: "assistant",
@@ -228,10 +239,23 @@ module.exports = {
         let outcome = completion.choices[0].message.content;
 
         let damage = 0;
-        if (outcome.toLowerCase().includes("damage taken: ")) {
+        if (outcome.toLowerCase().includes("damage taken")) {
           damage =
-            parseInt(outcome.toLowerCase().split("damage taken: ")[1]) ?? 0;
+            parseInt(outcome.toLowerCase().split("damage taken:")[1]) ?? 0;
         }
+
+        let selfDamage = 0;
+        if (outcome.toLowerCase().includes("self damage:"))
+          selfDamage =
+            parseInt(outcome.toLowerCase().split("self damage:")[1]) ?? 0;
+
+        let healthRegen = 0;
+        if (outcome.toLowerCase().includes("health regen:"))
+          healthRegen =
+            parseInt(outcome.toLowerCase().split("health regen:")[1]) ?? 0;
+
+        ogBattle.characters[ogBattle.turn].health -= selfDamage;
+        ogBattle.characters[ogBattle.turn].health += healthRegen;
 
         let randomCrit = Math.floor(Math.random() * 21);
         // + ogBattle.characters[ogBattle.turn].stats.lck -

@@ -76,6 +76,23 @@ module.exports = {
 
       await interaction.showModal(modal);
     }
+
+    if (interaction.customId.startsWith("btn_char_list_export")) {
+      const charName = interaction.customId.split("btn_char_list_export_")[1];
+      const char = (db.get(`${interaction.user.id}_char`) ?? []).find(
+        (c) => c.name === charName
+      );
+      if (char)
+        await interaction.reply({
+          content: JSON.stringify(char),
+          ephemeral: true,
+        });
+      else
+        await interaction.reply({
+          content: "Failed to find character, please try again",
+          ephemeral: true,
+        });
+    }
   },
   async characterRegistrationButtonHandler(interaction) {
     // Handles buttons for character registration form

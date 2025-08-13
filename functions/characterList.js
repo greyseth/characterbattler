@@ -75,14 +75,18 @@ module.exports = async function characterList(interaction, index, newMsg) {
     );
 
   const managementRow = new ActionRowBuilder().addComponents(
+    // new ButtonBuilder()
+    //   .setLabel("Edit Details")
+    //   .setStyle(ButtonStyle.Secondary)
+    //   .setCustomId("btn_char_list_edit"),
+    // new ButtonBuilder()
+    //   .setLabel("Delete Character")
+    //   .setStyle(ButtonStyle.Danger)
+    //   .setCustomId("btn_char_list_delete"),
     new ButtonBuilder()
-      .setLabel("Edit Details")
+      .setLabel("Export to JSON")
       .setStyle(ButtonStyle.Secondary)
-      .setCustomId("btn_char_list_edit"),
-    new ButtonBuilder()
-      .setLabel("Delete Character")
-      .setStyle(ButtonStyle.Danger)
-      .setCustomId("btn_char_list_delete")
+      .setCustomId("btn_char_list_export_" + char.name)
   );
 
   if (!newMsg)
