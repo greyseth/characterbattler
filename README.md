@@ -1,6 +1,9 @@
 # CharacterBattler
 CharacterBattler is a Discord bot that lets you have PvP battles with any character of your creation. Written using Discord.js and hosted on Render.com.
 
+![Character management menu](https://i.ibb.co.com/TB2LVVML/Screenshot-2025-08-11-160432.png)
+![Battle example](https://i.ibb.co.com/nMMSzSKf/Screenshot-2025-08-11-155819.png)
+
 # Features
 - Register any character you can imagine.
 - Challenge any player to a battle using your characters in a DnD-style turn-based fight.
@@ -27,3 +30,4 @@ CharacterBattler is a Discord bot that lets you have PvP battles with any charac
 - [ ] Team battle system
 - [ ] EXP and level progression system
 - [ ] PvE game mode
+- [ ] 3 or more player free-for-all
