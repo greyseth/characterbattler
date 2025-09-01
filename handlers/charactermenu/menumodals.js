@@ -70,10 +70,99 @@ module.exports = {
       }
     }
 
-    // TODO: Character edit
+    // Character edit
+    if (interaction.customId.startsWith("modal_edit_")) {
+      const editIndex = parseInt(interaction.customId.split("modal_edit_")[1]);
 
-    // Character delete
-    if (interaction.customId === "modal_delete") {
+      let characterList = (await db.get(`${interaction.user.id}_char`)) ?? [];
+      if (characterList.length > 0) {
+        const skills = interaction.fields
+          .getTextInputValue("skills")
+          .split(";")
+          .filter((_, i) => i < 5);
+        const weaknesses = interaction.fields
+          .getTextInputValue("weaknesses")
+          .split(";")
+          .filter((_, i) => i < 5);
+        const statsStr = interaction.fields
+          .getTextInputValue("skillpoints")
+          .split("\n")
+          .filter((_, i) => i < 6);
+        const stats = {
+          str: (statsStr.find((ss) => ss.includes("strength")) || "").split(
+            ":"
+          )[1],
+          def: (statsStr.find((ss) => ss.includes("defense")) || "").split(
+            ":"
+          )[1],
+          end: (statsStr.find((ss) => ss.includes("endurance")) || "").split(
+            ":"
+          )[1],
+          int: (statsStr.find((ss) => ss.includes("intelligence")) || "").split(
+            ":"
+          )[1],
+          agi: (statsStr.find((ss) => ss.includes("agility")) || "").split(
+            ":"
+          )[1],
+          lck: (statsStr.find((ss) => ss.includes("luck")) || "").split(":")[1],
+        };
+
+        if (skills.length < 1)
+          return await interaction.reply({
+            content: "Skills cannot be empty",
+            ephemeral: true,
+          });
+        if (weaknesses.length < 1)
+          return await interaction.reply({
+            content: "Weaknesses cannot be empty",
+            ephemeral: true,
+          });
+        let invalid = false;
+        let invalidMsg = "";
+
+        let spTotal = 0;
+        Object.keys(stats).forEach((stat) => {
+          if (!parseInt(stats[stat])) {
+            invalid = true;
+            invalidMsg = `${stat} stat is required!`;
+          } else spTotal += parseInt(stats[stat]);
+        });
+
+        if (!invalid) {
+          if (spTotal > 24) {
+            invalid = true;
+            invalidMsg = "Allocated SP more than 24";
+          }
+        }
+
+        if (invalid)
+          return await interaction.reply({
+            content: invalidMsg,
+            ephemeral: true,
+          });
+
+        characterList[editIndex] = {
+          ...characterList[editIndex],
+          name: interaction.fields.getTextInputValue("name"),
+          description: interaction.fields.getTextInputValue("description"),
+          skills: interaction.fields.getTextInputValue("skills").split(";"),
+          weaknesses: interaction.fields
+            .getTextInputValue("weaknesses")
+            .split(";"),
+          stats: stats,
+        };
+
+        await db.set(`${interaction.user.id}_char`, characterList);
+
+        await interaction.reply({
+          content: "Character successfully updated",
+          ephemeral: true,
+        });
+      } else
+        interaction.reply({
+          content: "Something wrong happened",
+          ephemeral: true,
+        });
     }
   },
   // I REALLY should make this a loop... but maybe later I'm too lazy
@@ -246,8 +335,6 @@ module.exports = {
               invalidMsg = `${stat} stat is required!`;
             } else spTotal += parseInt(stats[stat]);
           });
-
-          console.log(spTotal);
 
           if (!invalid) {
             if (spTotal > 24) {

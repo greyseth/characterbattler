@@ -75,18 +75,14 @@ module.exports = async function characterList(interaction, index, newMsg) {
     );
 
   const managementRow = new ActionRowBuilder().addComponents(
-    // new ButtonBuilder()
-    //   .setLabel("Edit Details")
-    //   .setStyle(ButtonStyle.Secondary)
-    //   .setCustomId("btn_char_list_edit"),
-    // new ButtonBuilder()
-    //   .setLabel("Delete Character")
-    //   .setStyle(ButtonStyle.Danger)
-    //   .setCustomId("btn_char_list_delete"),
     new ButtonBuilder()
-      .setLabel("Export to JSON")
+      .setLabel("Edit Details")
       .setStyle(ButtonStyle.Secondary)
-      .setCustomId("btn_char_list_export_" + char.name)
+      .setCustomId(`btn_char_list_edit_${index}`),
+    new ButtonBuilder()
+      .setLabel("Delete Character")
+      .setStyle(ButtonStyle.Danger)
+      .setCustomId(`btn_char_list_delete_${index}`)
   );
 
   if (!newMsg)
@@ -98,7 +94,16 @@ module.exports = async function characterList(interaction, index, newMsg) {
   else
     await interaction.reply({
       embeds: [embed],
-      components: [row, managementRow],
+      components: [
+        row,
+        managementRow,
+        new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setLabel("Export to JSON")
+            .setStyle(ButtonStyle.Secondary)
+            .setCustomId("btn_char_list_export_" + char.name)
+        ),
+      ],
       ephemeral: true,
     });
 };
