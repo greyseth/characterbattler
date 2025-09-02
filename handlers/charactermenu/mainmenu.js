@@ -60,21 +60,94 @@ module.exports = {
       await interaction.showModal(modal);
     }
 
-    if (interaction.customId === "btn_char_list_edit") {
-      await interaction.showModal();
-    }
-    if (interaction.customId === "btn_char_list_delete") {
-      const modal = new ModalBuilder()
-        .setTitle("Confirm Character Deletion")
-        .setCustomId("modal_delete");
-      const input = new TextInputBuilder()
-        .setLabel("Type your character's name to confirm")
-        .setStyle(TextInputStyle.Short)
-        .setCustomId("input_confirmation");
+    if (interaction.customId.startsWith(`btn_char_list_edit_`)) {
+      const editIndex = parseInt(
+        interaction.customId.split("btn_char_list_edit_")[1]
+      );
 
-      modal.addComponents(input);
+      const characterList = (await db.get(`${interaction.user.id}_char`)) ?? [];
+      const charData = characterList[editIndex];
+
+      const modal = new ModalBuilder()
+        .setTitle("Edit Character")
+        .setCustomId(`modal_edit_${editIndex}`);
+
+      const nameInput = new TextInputBuilder()
+        .setLabel("Character Name")
+        .setCustomId("name")
+        .setValue(charData.name)
+        .setRequired(true)
+        .setStyle(TextInputStyle.Short);
+      const descriptionInput = new TextInputBuilder()
+        .setLabel("Character Description")
+        .setCustomId("description")
+        .setValue(charData.description)
+        .setPlaceholder(
+          "You'll be prompted to enter their skills and weaknesses after this, so just keep it brief"
+        )
+        .setRequired(true)
+        .setStyle(TextInputStyle.Paragraph);
+      const skillsInput = new TextInputBuilder()
+        .setLabel("Character Abilities")
+        .setCustomId("skills")
+        .setValue(charData.skills.join(";"))
+        .setPlaceholder(
+          "Cryomancy;Proficiency in martial arts;Superhuman strength and reflexes;Grandmaster of a clan"
+        )
+        .setRequired(true)
+        .setStyle(TextInputStyle.Paragraph);
+      const weaknessesInput = new TextInputBuilder()
+        .setLabel("Character Weaknesses")
+        .setCustomId("weaknesses")
+        .setValue(charData.weaknesses.join(";"))
+        .setPlaceholder(
+          "Regular human durability;Ice structures susceptible to fire"
+        )
+        .setRequired(true)
+        .setStyle(TextInputStyle.Paragraph);
+      const sp = charData.stats;
+      const skillpointsInput = new TextInputBuilder()
+        .setLabel("Max 24 pts")
+        .setCustomId("skillpoints")
+        .setValue(
+          `strength:${sp.str}\ndefense:${sp.def}\nendurance:${sp.end}\nagility:${sp.agi}\nintelligence:${sp.int}\nluck:${sp.lck}`
+        )
+        .setRequired(true)
+        .setStyle(TextInputStyle.Paragraph);
+
+      modal.addComponents(
+        new ActionRowBuilder().addComponents(nameInput),
+        new ActionRowBuilder().addComponents(descriptionInput),
+        new ActionRowBuilder().addComponents(skillsInput),
+        new ActionRowBuilder().addComponents(weaknessesInput),
+        new ActionRowBuilder().addComponents(skillpointsInput)
+      );
 
       await interaction.showModal(modal);
+    }
+    if (interaction.customId.startsWith("btn_char_list_delete_")) {
+      const deleteIndex = parseInt(
+        interaction.customId.split("btn_char_list_delete_")[1]
+      );
+      let allChars = await db.get(`${interaction.user.id}_char`);
+
+      let nextPrevIndex = 0;
+      if (deleteIndex === allChars.length - 1) nextPrevIndex = deleteIndex - 1;
+      else if (deleteIndex === 0) nextPrevIndex = 1;
+      else nextPrevIndex = deleteIndex + 1;
+
+      allChars = allChars.filter((_, i) => i !== deleteIndex);
+
+      await db.set(`${interaction.user.id}_char`, allChars);
+
+      if (allChars.length > 0) characterList(interaction, nextPrevIndex, false);
+      else
+        await interaction.update({
+          content: "You don't have any more characters",
+          ephemeral: true,
+          embeds: [],
+          components: [],
+        });
     }
 
     if (interaction.customId.startsWith("btn_char_list_export")) {
