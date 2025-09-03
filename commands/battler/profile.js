@@ -22,6 +22,8 @@ module.exports = {
     await initializeProfile(user.id);
     const profile = await db.get(`${user.id}_profile`);
 
+    console.log(profile);
+
     await interaction.reply({
       embeds: [
         new EmbedBuilder()

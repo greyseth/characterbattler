@@ -12,5 +12,6 @@ module.exports = async (userId) => {
         lost: 0,
       },
       main: undefined,
+      lastCharacters: [],
     });
 };

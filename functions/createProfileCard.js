@@ -1,3 +1,5 @@
+const ranks = require("../ranks.json");
+
 const { createCanvas, loadImage } = require("canvas");
 const { AttachmentBuilder } = require("discord.js");
 
@@ -54,7 +56,7 @@ module.exports = async (user, profile) => {
   ctx.fillText(
     `Win Rate: ${
       profile.battles.total > 0
-        ? Math.floor(profile.battles.won / profile.battles.total)
+        ? Math.round((profile.battles.won / profile.battles.total) * 100)
         : 0
     }%`,
     280,
