@@ -28,6 +28,6 @@ CharacterBattler is a Discord bot that lets you have PvP battles with any charac
 
 # Roadmap
 - [ ] Team battle system
-- [ ] EXP and level progression system
+- [x] EXP and level progression system
 - [ ] PvE game mode
 - [ ] 3 or more player free-for-all
