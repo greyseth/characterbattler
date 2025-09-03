@@ -46,7 +46,7 @@ module.exports = {
             let battleData = getBattles()[battleIndex];
 
             battleData.id = newId();
-            battleData.characters[1] = { ...selectedCharacter, health: 150 };
+            battleData.characters[1] = { ...selectedCharacter, health: 10 };
             battleData.running = true;
 
             editBattle(battleData, battleIndex);
@@ -220,7 +220,25 @@ module.exports = {
             {
               role: "assistant",
               content: `Previous action:\n${
-                ogBattle.lastOutcome ?? "None yet"
+                ogBattle.lastOutcome ??
+                `
+                Response format:
+
+                Character Name: move performed
+
+                Dice roll: number
+
+                Move outcome
+
+                damage taken: number
+
+                health regen: number
+
+                self damage: number
+
+                States:
+                List different saved states, transformations, status ailments, etc
+                `
               }`,
             },
             {

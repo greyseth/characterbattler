@@ -2,6 +2,9 @@ const { EmbedBuilder } = require("@discordjs/builders");
 const { getBattles, removeBattle } = require("../util/battles");
 const { ActionRowBuilder } = require("@discordjs/builders");
 const { ButtonBuilder, ButtonStyle } = require("discord.js");
+const db = require("../util/db");
+const initializeProfile = require("./initializeProfile");
+const createProfileCard = require("./createProfileCard");
 
 module.exports = async (interaction, battleId, prevOutcome) => {
   const battleData =
@@ -49,35 +52,146 @@ module.exports = async (interaction, battleId, prevOutcome) => {
     const victorIndex = deadCharacter.charIndex === 0 ? 1 : 0;
     const victor = battleData.characters[victorIndex];
 
-    if (interaction.replied || interaction.deferred) {
-      await interaction.editReply({
-        content: `${prevOutcome}\n\n**Battle concluded**`,
-        embeds: [
-          new EmbedBuilder()
-            .setTitle("Winner: " + victor.name)
-            .setDescription(
-              `${battleData.players[victorIndex].username} is victorious!`
-            ),
-          // .setColor("#FFD700"),
-          // FIXME: Again, why is expecting an array???
-        ],
-        components: [],
-      });
-    } else {
-      await interaction.reply({
-        content: `${prevOutcome}\n\n**Battle concluded**`,
-        embeds: [
-          new EmbedBuilder()
-            .setTitle("Winner: " + victor.name)
-            .setDescription(
-              `${battleData.players[victorIndex].username} is victorious!`
-            ),
-          // .setColor("#FFD700"),
-          // FIXME: Again, why is expecting an array???
-        ],
-        components: [],
-      });
+    // Winner profile data update
+    await initializeProfile(battleData.players[victorIndex].id);
+    let winnerProfile = await db.get(
+      `${battleData.players[victorIndex].id}_profile`
+    );
+
+    winnerProfile.battles.total += 1;
+    winnerProfile.battles.won += 1;
+
+    // Loser profile data update
+    await initializeProfile(battleData.players[deadCharacter.charIndex].id);
+    let loserProfile = await db.get(
+      `${battleData.players[deadCharacter.charIndex].id}_profile`
+    );
+
+    loserProfile.battles.total += 1;
+    loserProfile.battles.lost += 1;
+
+    let expGain = 0;
+    let expSubtract = 0;
+
+    // Rank update
+    if (battleData.type === "ranked") {
+      const winRankDiff = loserProfile.rank - winnerProfile.rank;
+      const loseRankDiff = winnerProfile.rank - loserProfile.rank;
+
+      expGain = 33 + 10 * winRankDiff;
+      winnerProfile.exp += expGain;
+      if (
+        winnerProfile.exp >= winnerProfile.nextLevel &&
+        winnerProfile.rank < 10
+      ) {
+        winnerProfile.rank += 1;
+        winnerProfile.exp = winnerProfile.exp - winnerProfile.nextLevel;
+      }
+
+      expSubtract = 25 - 5 * loseRankDiff;
+      if (loserProfile.exp < expSubtract && loserProfile.rank > 1) {
+        loserProfile.rank -= 1;
+        loserProfile.exp = Math.max(
+          0,
+          loserProfile.nextLevel - (expSubtract - loserProfile.exp)
+        );
+      } else loserProfile.exp -= expSubtract;
+
+      if (loserProfile.exp <= 0) loserProfile.exp = 0;
     }
+
+    // Main used character setup
+    if (!winnerProfile.lastCharacters) winnerProfile.lastCharacters = [];
+    winnerProfile.lastCharacters.push(battleData.characters[victorIndex].name);
+    if (winnerProfile.lastCharacters.length > 10)
+      winnerProfile.lastCharacters.shift();
+
+    if (winnerProfile.lastCharacters.length === 10) {
+      let count = {};
+      winnerProfile.lastCharacters.forEach((char) => {
+        if (!count[char]) count[char] = 1;
+        else count[char] += 1;
+      });
+
+      let biggestCount = { char: "", count: 0 };
+      Object.keys(count).forEach((char) => {
+        if (count[char] > biggestCount.count)
+          biggestCount = { char: char, count: count[char] };
+      });
+
+      winnerProfile.main = biggestCount.char;
+    }
+
+    if (!loserProfile.lastCharacters) loserProfile.lastCharacters = [];
+    loserProfile.lastCharacters.push(
+      battleData.characters[deadCharacter.charIndex].name
+    );
+    if (loserProfile.lastCharacters.length > 10)
+      loserProfile.lastCharacters.shift();
+
+    if (loserProfile.lastCharacters.length === 10) {
+      let count = {};
+      loserProfile.lastCharacters.forEach((char) => {
+        if (!count[char]) count[char] = 1;
+        else count[char] += 1;
+      });
+
+      let biggestCount = { char: "", count: 0 };
+      Object.keys(count).forEach((char) => {
+        if (count[char] > biggestCount.count)
+          biggestCount = { char: char, count: count[char] };
+      });
+
+      loserProfile.main = biggestCount.char;
+    }
+
+    // DB apply
+    await db.set(
+      `${battleData.players[victorIndex].id}_profile`,
+      winnerProfile
+    );
+    await db.set(
+      `${battleData.players[deadCharacter.charIndex].id}_profile`,
+      loserProfile
+    );
+
+    const winMessage = {
+      content: `${prevOutcome}\n\n**Battle concluded**`,
+      embeds: [
+        new EmbedBuilder()
+          .setTitle("Winner: " + victor.name)
+          .setDescription(
+            `${battleData.players[victorIndex].username} is victorious!`
+          )
+          .addFields(
+            {
+              name: "Winner EXP gain",
+              value:
+                battleData.type === "ranked"
+                  ? expGain.toString()
+                  : "0 (casual match)",
+            },
+            {
+              name: "Loser EXP loss",
+              value:
+                battleData.type === "ranked"
+                  ? expSubtract.toString()
+                  : "0 (casual match)",
+            }
+          )
+          .setImage("attachment://profile-card.png"),
+        // .setColor("#FFD700"),
+        // FIXME: Again, why is expecting an array???
+      ],
+      components: [],
+      files: [
+        await createProfileCard(battleData.players[victorIndex], winnerProfile),
+      ],
+    };
+
+    if (interaction.replied || interaction.deferred)
+      await interaction.editReply(winMessage);
+    else await interaction.reply(winMessage);
 
     removeBattle(getBattles().findIndex((b) => b.id == battleId));
     return;

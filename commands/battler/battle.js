@@ -19,6 +19,18 @@ module.exports = {
     )
     .addStringOption((option) =>
       option
+        .setName("matchtype")
+        .setDescription(
+          "Match type to challenge player (casual matches won't have an effect on your rank and exp)"
+        )
+        .addChoices(
+          { name: "Ranked Match", value: "ranked" },
+          { name: "Casual Match", value: "casual" }
+        )
+        .setRequired(true)
+    )
+    .addStringOption((option) =>
+      option
         .setName("setting")
         .setDescription("Describe the setting the battle will take place in")
     ),
@@ -58,7 +70,7 @@ module.exports = {
       characters: [
         {
           ...(await db.get(`${interaction.user.id}_char_selected`)),
-          health: 150,
+          health: 10,
         },
         {},
       ],
@@ -68,6 +80,7 @@ module.exports = {
         "A simulation environment that can change to anything",
       running: false,
       turn: 0,
+      type: interaction.options.getString("matchtype"),
     });
 
     await interaction.reply({
