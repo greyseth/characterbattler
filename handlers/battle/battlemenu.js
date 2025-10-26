@@ -46,7 +46,7 @@ module.exports = {
             let battleData = getBattles()[battleIndex];
 
             battleData.id = newId();
-            battleData.characters[1] = { ...selectedCharacter, health: 10 };
+            battleData.characters[1] = { ...selectedCharacter, health: 150 };
             battleData.running = true;
 
             editBattle(battleData, battleIndex);
