@@ -257,11 +257,20 @@ module.exports = {
 
         let outcome = completion.choices[0].message.content;
 
+        let dmgLine = outcome
+          .toLowerCase()
+          .split("\n")
+          .find(
+            (s) =>
+              s.includes("damage") &&
+              (s.includes("taken") ||
+                s.includes("took") ||
+                s.includes("takes")) &&
+              s.match(".*\\d.*")
+          );
+
         let damage = 0;
-        if (outcome.toLowerCase().includes("damage taken")) {
-          damage =
-            parseInt(outcome.toLowerCase().split("damage taken:")[1]) ?? 0;
-        }
+        if (dmgLine) damage = parseInt(dmgLine.replace(/\D/g, ""));
 
         let selfDamage = 0;
         if (outcome.toLowerCase().includes("self damage:"))
